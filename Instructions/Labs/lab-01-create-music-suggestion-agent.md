@@ -39,27 +39,15 @@ lab:
 在这些练习中，你可以使用初学者项目。 使用以下步骤设置初学者项目：
 
 > [!IMPORTANT]
-> 完成这些步骤需要安装 .NET Framework 8.0 并拥有 Github 帐户。
+> 必须安装 .NET Framework 8.0 以及 C# 和 NuGet 包管理器的 VS Code 扩展。
 
-1. 打开 Visual Studio Code。
+1. 下载位于 `https://github.com/MicrosoftLearning/AZ-2005-Develop-AI-agents-OpenAI-Semantic-Kernel-SDK/blob/master/Allfiles/Labs/01/Lab-01-Starter.zip` 的 zip 文件。
 
-1. 在 Visual Studio Code 的“开始”部分下，选择“克隆 Git 存储库”。********
+1. 将 zip 文件的内容提取到容易查找和记住的位置，例如桌面上的文件夹。
 
-1. 在 URL 栏中，输入 `https://github.com/MicrosoftLearning/MSLearn-Develop-AI-Agents-with-Azure-OpenAI-and-Semantic-Kernel-SDK.git`
+1. 打开 Visual Studio Code，选择“文件” > “打开文件夹”********。
 
-1. 在文件资源管理器中，在易于查找和记住的位置（例如桌面中的文件夹）中创建新文件夹。
-
-1. 单击“选择为存储库目标”按钮。****
-
-    需要登录到 GitHub 才能成功克隆项目。
-
-1. 在 Visual Studio Code 中打开项目。
-
-1. 在资源管理器中，右键单击“Lab01-create-music-recommendations-agent/Lab01-Project”文件夹，然后单击“在集成终端中打开”********。
-
-1. 展开“Lab01-create-music-recommendations-agent/Lab01-Project”文件夹****。
-
-    此时应会看到“Program.cs”文件。
+1. 导航到提取的 Starter**** 文件夹并选择“选择文件夹”****。
 
 1. 在代码编辑器中打开“Program.cs”文件。
 
@@ -102,19 +90,9 @@ lab:
 
 在本练习中，了解如何生成第一个语义内核 SDK 项目。 了解如何创建新项目，添加语义内核 SDK NuGet 包，以及添加对语义内核 SDK 的引用。 现在就开始吧！
 
-1. 打开 Visual Studio Code。
+1. 返回到 Visual Studio Code 项目。
 
-1. 在资源管理器中，右键单击“Lab01-create-music-recommendations-agent/Lab01-Project”文件夹，然后单击“在集成终端中打开”********。
-
-1. 展开“Lab01-create-music-recommendations-agent/Lab01-Project”文件夹****。
-
-    此时应会看到“Program.cs”文件。
-
-1. 在代码编辑器中打开“Program.cs”文件。
-
-1. 在项目的目录中打开终端。
-
-    可通过右键单击项目文件夹并选择“在集成终端中打开”来打开终端
+1. 通过选择“终端” > “新建终端”来打开“终端”********。
 
 1. 在终端中，运行以下命令以安装语义内核 SDK：
 
@@ -198,7 +176,7 @@ lab:
         // Read the existing content from the file
         string filePath = "Files/RecentlyPlayed.txt";
         string jsonContent = File.ReadAllText(filePath);
-        var RecentlyPlayed = (JsonArray) JsonNode.Parse(jsonContent);
+        var recentlyPlayed = (JsonArray) JsonNode.Parse(jsonContent);
 
         var newSong = new JsonObject
         {
