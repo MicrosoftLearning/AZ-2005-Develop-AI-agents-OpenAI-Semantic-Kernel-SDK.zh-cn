@@ -71,9 +71,9 @@ lab:
 
 :::image type="content" source="../media/model-deployments.png" alt-text="Azure OpenAI 部署页的屏幕截图。":::
 
-1. 依次选择“创建新部署”、“部署模型”。********
+1. 选择“创建新部署”****，然后选择“+创建新部署”****。
 
-1. 在“选择模型”下，选择“gpt-35-turbo-16k”。********
+1. 在**部署模型**弹出窗口中，选择 **gpt-35-turbo-16k**。
 
     使用默认模型版本
 
@@ -108,6 +108,8 @@ lab:
 
     ```c#
     using AITravelAgent;
+    using System.ComponentModel;
+    using Microsoft.SemanticKernel;
 
     class CurrencyConverter
     {
@@ -247,6 +249,7 @@ lab:
 
     ```c#
     kernel.ImportPluginFromType<CurrencyConverter>();
+    kernel.ImportPluginFromType<ConversationSummaryPlugin>();
     var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
 
     var result = await kernel.InvokeAsync(prompts["GetTargetCurrencies"],
@@ -281,6 +284,7 @@ lab:
 
     ```c#
     kernel.ImportPluginFromType<CurrencyConverter>();
+    kernel.ImportPluginFromType<ConversationSummaryPlugin>();
     var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
 
     Console.WriteLine("What would you like to do?");
@@ -331,6 +335,7 @@ lab:
 
     ```c#
     kernel.ImportPluginFromType<CurrencyConverter>();
+    kernel.ImportPluginFromType<ConversationSummaryPlugin>();
     var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
 
     OpenAIPromptExecutionSettings settings = new()
@@ -526,12 +531,12 @@ lab:
           "description": "The destination a user wants to visit",
           "required": true
       }
-  ]
-  ```
+   ]
+   ```
 
 1. 导航到 Prompts/SuggestActivities/skprompt.txt**** 并打开该文件
 
-1. 添加提示以使用聊天历史记录：
+1. 将提示的前半部分替换为以下使用聊天历史记录变量的提示：
 
     ```html 
     You are an experienced travel agent. 
