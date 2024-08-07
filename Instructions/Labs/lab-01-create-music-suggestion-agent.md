@@ -30,7 +30,7 @@ lab:
 要完成本练习，您需要在系统中安装以下设备：
 
 * [Visual Studio Code](https://code.visualstudio.com)
-* [最新的 .NET 7.0 SDK。](https://dotnet.microsoft.com/download/dotnet/7.0)
+* [最新的 .NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 * Visual Studio Code 的 [C# 扩展](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp)
 
 
@@ -41,7 +41,11 @@ lab:
 > [!IMPORTANT]
 > 必须安装 .NET Framework 8.0 以及 C# 和 NuGet 包管理器的 VS Code 扩展。
 
-1. 下载位于 `https://github.com/MicrosoftLearning/AZ-2005-Develop-AI-agents-OpenAI-Semantic-Kernel-SDK/blob/master/Allfiles/Labs/01/Lab-01-Starter.zip` 的 zip 文件。
+1. 将链接粘贴到新的浏览器窗口中：
+   
+     `https://github.com/MicrosoftLearning/AZ-2005-Develop-AI-agents-OpenAI-Semantic-Kernel-SDK/blob/master/Allfiles/Labs/01/Lab-01-Starter.zip`
+
+1. 通过单击位于页面右上角的 `...` 按钮或按 <kbd>Ctrl</kbd>+<kbd>Shift+</kbd><kbd>S</kbd> 来下载 zip 文件。
 
 1. 将 zip 文件的内容提取到容易查找和记住的位置，例如桌面上的文件夹。
 
@@ -50,6 +54,9 @@ lab:
 1. 导航到提取的 Starter**** 文件夹并选择“选择文件夹”****。
 
 1. 在代码编辑器中打开“Program.cs”文件。
+
+> [!NOTE]
+> 如果系统提示你信任该文件夹，请选择**是，我信任作者**。 
 
 ## 练习 1：使用语义内核 SDK 运行提示
 
@@ -122,7 +129,7 @@ lab:
     Console.WriteLine(result);
     ```
 
-1. 运行代码，检查是否看到了来自 Azure Open AI 模型的响应，其中包含全球最著名的 5 位音乐家。
+1. 输入 `dotnet run` 以运行代码，检查是否看到了来自 Azure Open AI 模型的响应，其中包含全球最著名的 5 位音乐家。
 
     响应来自传递给内核的 Azure Open AI 模型。 语义内核 SDK 能够连接到大型语言模型 (LLM)，并运行提示。 注意从 LLM 接收响应的速度有多快。 语义内核 SDK 使构建智能应用程序变得简单高效。
 
@@ -224,7 +231,7 @@ lab:
     Added 'Danse' to recently played
     ```
 
-    如果打开“RecentlyPlayed.txt”，你应会看到新歌曲已添加到列表中。
+    如果打开“Files/RecentlyPlayed.txt”，你应会看到新歌曲已添加到列表中。
 
 ### 任务 2：提供个性化歌曲推荐
 
@@ -305,16 +312,16 @@ lab:
 
 1. 在“Plugins”文件夹中，创建一个名为“MusicConcertPlugin.cs”的新文件
 
-1. 在“MusicConcertPlugin.cs”文件中，添加以下代码：
+1. 在“MusicConcertsPlugin”文件中，添加以下代码：
 
     ```c#
     using System.ComponentModel;
     using Microsoft.SemanticKernel;
 
-    public class MusicConcertPlugin
+    public class MusicConcertsPlugin
     {
         [KernelFunction, Description("Get a list of upcoming concerts")]
-        public static string GetTours()
+        public static string GetConcerts()
         {
             string content = File.ReadAllText($"Files/ConcertDates.txt");
             return content;
@@ -417,11 +424,21 @@ lab:
 1. 在“Program.cs”文件中，将代码更新为以下内容：
 
     ```c#
+    using Microsoft.SemanticKernel;
+    using Microsoft.SemanticKernel.Planning.Handlebars;
+    
+    var builder = Kernel.CreateBuilder();
+    builder.AddAzureOpenAIChatCompletion(
+        "your-deployment-name",
+        "your-endpoint",
+        "your-api-key",
+        "deployment-model");
     var kernel = builder.Build();
     kernel.ImportPluginFromType<MusicLibraryPlugin>();
-    kernel.ImportPluginFromType<MusicConcertPlugin>();
+    kernel.ImportPluginFromType<MusicConcertsPlugin>();
     kernel.ImportPluginFromPromptDirectory("Prompts");
 
+    #pragma warning disable SKEXP0060
     var planner = new HandlebarsPlanner(new HandlebarsPlannerOptions() { AllowLoops = true });
 
     string location = "Redmond WA USA";
@@ -433,6 +450,8 @@ lab:
 
     Console.WriteLine($"{result}");
     ```
+
+    >[!NOTE] 由于 Handlebars 包目前处于预览状态，因此可能需要禁止编译器警告来运行代码。
 
 1. 在终端中输入 `dotnet run`
 
@@ -512,7 +531,7 @@ lab:
 
     接下来，使用这个生成的模板创建你自己的 Handlebars 计划。 
 
-1. 使用以下文本创建名为“handlebarsTemplate.txt”的新文件：
+1. 在“文件存储”目录中，使用以下文本创建名为“handlebarsTemplate.txt”的新文件：
 
     ```output
     {{set "addSong" addSong}}
@@ -553,6 +572,9 @@ lab:
 1. 通过修改现有代码移除 handlebars 计划：
 
     ```c#
+    using Microsoft.SemanticKernel;
+    using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
+
     var builder = Kernel.CreateBuilder();
     builder.AddAzureOpenAIChatCompletion(
         "your-deployment-name",
@@ -579,7 +601,7 @@ lab:
 1. 添加用于读取模板文件并创建函数的代码：
 
     ```c#
-    string template = File.ReadAllText($"handlebarsTemplate.txt");
+    string template = File.ReadAllText($"Files/HandlebarsTemplate.txt");
 
     var handlebarsPromptFunction = kernel.CreateFunctionFromPrompt(
         new() {
