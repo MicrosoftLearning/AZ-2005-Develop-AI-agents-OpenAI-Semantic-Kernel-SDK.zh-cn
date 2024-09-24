@@ -145,7 +145,7 @@ lab:
 
 1. 在“Lab01-Project”目录中创建一个新文件夹并将其命名为“Plugins”。
 
-1. 在“Plugins”文件夹中，创建新文件“MusicLibrary.cs”
+1. 在“Plugins”文件夹中，创建新文件“MusicLibraryPlugin.cs”
 
     首先，创建一些快速函数来获取歌曲并将其添加到用户的“最近播放”列表中。
 
@@ -232,6 +232,9 @@ lab:
     ```
 
     如果打开“Files/RecentlyPlayed.txt”，你应会看到新歌曲已添加到列表中。
+
+> [!NOTE]
+> 如果终端显示 null 值的警告，可以忽略它们，因为它们不会影响结果。
 
 ### 任务 2：提供个性化歌曲推荐
 
