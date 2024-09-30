@@ -21,7 +21,7 @@ lab:
 * 生成语义内核对象
 * 使用语义内核 SDK 运行提示
 * 创建语义内核函数和插件
-* 使用 Handlebars 规划器自动执行任务
+* 启用自动函数调用以自动执行任务
 
 ## 实验室教学设置
 
@@ -105,7 +105,7 @@ lab:
 
     `dotnet add package Microsoft.SemanticKernel --version 1.2.0`
 
-1. 若要创建内核，请将以下代码添加到“Program.cs”文件中：
+1. 若要创建内核，请将以下代码添加到“**Program.cs**”文件中：
     
     ```c#
     using Microsoft.SemanticKernel;
@@ -202,7 +202,7 @@ lab:
 
     在此代码中，你创建一个函数，接受“艺术家”、“歌曲”和“流派”作为字符串。 除了函数的 `Description` 之外，你还添加输入变量的说明。 “RecentlyPlayed.txt”文件包含用户最近播放的歌曲的 json 格式列表。 此代码从文件中读取现有内容，对其进行分析，然后将新歌曲添加到列表中。 已更新的列表此后会写回到文件中。
 
-1. 使用以下代码更新“Program.cs”文件：
+1. 使用以下代码更新 Program.cs 文件****：
 
     ```c#
     var kernel = builder.Build();
@@ -221,7 +221,7 @@ lab:
     Console.WriteLine(result);
     ```
 
-    在此代码中，使用 `ImportPluginFromType` 将 `MusicLibraryPlugin` 导入到内核。 然后使用要调用的插件名称和函数名称调用 `InvokeAsync`。 还可以传入艺术家、歌曲和流派作为参数。
+    在此代码中，将使用 ImportPluginFromType 将 MusicLibraryPlugin 导入内核。 然后使用要调用的插件名称和函数名称调用 InvokeAsync。 还可以传入艺术家、歌曲和流派作为参数。
 
 1. 通过在终端中输入 `dotnet run` 来运行代码。
 
@@ -254,7 +254,7 @@ lab:
 
     此函数从名为“MusicLibrary.txt”的文件中读取可用音乐列表。 该文件包含可供用户播放的歌曲的 json 格式列表。
 
-1. 使用以下代码更新“Program.cs”文件：
+1. 使用以下代码更新 Program.cs 文件****：
 
     ```c#
     var kernel = builder.Build();
@@ -373,9 +373,9 @@ lab:
     please recommend a relevant concert that is close to their location.
     ```
 
-    此提示有助于 LLM 筛选用户的输入，并从文本中仅检索目的地。 接下来，调用规划器来创建一个计划，将插件组合在一起以实现目标。
+    此提示有助于 LLM 筛选用户的输入，并从文本中仅检索目的地。 接下来，测试插件以验证输出。
 
-1. 打开“Program.cs”文件并使用以下代码更新它：
+1. 打开“**Program.cs**”文件并使用以下代码更新它：
 
     ```c#
     var kernel = builder.Build();    
@@ -408,27 +408,21 @@ lab:
 
     尝试调整提示和位置，查看可以生成哪些其他结果。
 
-## 练习 3：使用 Handlebars 计划自动推荐
+## 练习 3：基于用户输入自动执行建议
 
-当你需要执行多个步骤来完成任务时，Handlebars 规划器非常有用。 规划器使用 AI 来选择已注册到内核的插件，并将其组合成一系列步骤来实现目标。 在本练习中，你将使用 Handlebars 规划器生成计划模板，并使用它来自动给出推荐。
+可以改为使用自动函数调用来避免手动调用插件函数。 LLM 将自动选择并合并注册到内核的插件以实现目标。 在本练习中，你将启用自动函数调用以自动执行建议。
 
 完成练习估计所需时间****：10 分钟
 
-### 任务 1：生成计划模板
+### 任务 1：基于用户输入自动执行建议
 
-在此任务中，你将使用 Handlebars 规划器生成计划模板。 该计划模板用于根据用户的输入自动给出推荐。
+在此任务中，启用自动函数调用，以基于用户的输入生成建议。
 
-1. 通过在终端中输入以下内容来安装 Handlebars 规划器：
-
-    `dotnet add package Microsoft.SemanticKernel.Planners.Handlebars --version 1.2.0-preview`
-
-    接下来，替换 SuggestConcert 提示并改用 Handlebars 规划器来执行任务。
-
-1. 在“Program.cs”文件中，将代码更新为以下内容：
+1. 在“**Program.cs**”文件中，将代码更新为以下内容：
 
     ```c#
     using Microsoft.SemanticKernel;
-    using Microsoft.SemanticKernel.Planning.Handlebars;
+    using Microsoft.SemanticKernel.Connectors.OpenAI;
     
     var builder = Kernel.CreateBuilder();
     builder.AddAzureOpenAIChatCompletion(
@@ -441,20 +435,17 @@ lab:
     kernel.ImportPluginFromType<MusicConcertsPlugin>();
     kernel.ImportPluginFromPromptDirectory("Prompts");
 
-    #pragma warning disable SKEXP0060
-    var planner = new HandlebarsPlanner(new HandlebarsPlannerOptions() { AllowLoops = true });
-
-    string location = "Redmond WA USA";
-    string goal = @$"Based on the user's recently played music, suggest a 
+    OpenAIPromptExecutionSettings settings = new()
+    {
+        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+    };
+    
+    string prompt = @$"Based on the user's recently played music, suggest a 
         concert for the user living in ${location}";
 
-    var plan = await planner.CreatePlanAsync(kernel, goal);
-    var result = await plan.InvokeAsync(kernel);
-
-    Console.WriteLine($"{result}");
+    var autoInvokeResult = await kernel.InvokePromptAsync(prompt, new(settings));
+    Console.WriteLine(autoInvokeResult);
     ```
-
-    >[!NOTE] 由于 Handlebars 包目前处于预览状态，因此可能需要禁止编译器警告来运行代码。
 
 1. 在终端中输入 `dotnet run`
 
@@ -464,130 +455,15 @@ lab:
     Based on the user's recently played songs, the artist "Mademoiselle" has an upcoming concert in Seattle WA, USA on February 22, 2024, which is close to Redmond WA. Therefore, the recommended concert for the user would be Mademoiselle's concert in Seattle.
     ```
 
-    接下来，更改代码以输出 Handlebars 计划模板。
+    语义内核能够使用正确的参数自动调用 `SuggestConcert` 函数。 现在，代理能够根据用户最近播放的音乐列表及其所在位置为用户推荐音乐会。 接下来，可以添加对音乐建议的支持。
 
-1. 在“Program.cs”文件中，将代码更新为以下内容：
-
-    ```c#
-    var plan = await planner.CreatePlanAsync(kernel, goal);
-    Console.WriteLine("Plan:");
-    Console.WriteLine(plan);
-    ```
-
-    现在，你可以看到生成的计划。 接下来，修改计划以包含歌曲推荐或将歌曲添加到用户的最近播放列表。
-
-1. 使用以下片段扩展代码：
+1. 使用以下代码更新 **Program.cs** 文件：
 
     ```c#
-    var plan = await planner.CreatePlanAsync(kernel, 
-        @$"If add song:
-        Add a song to the user's recently played list.
-        
-        If concert recommendation:
-        Based on the user's recently played music, suggest a concert for 
-        the user living in a given location.
-
-        If song recommendation:
-        Suggest a song from the music library to the user based on their 
-        recently played songs.");
-
-    Console.WriteLine("Plan:");
-    Console.WriteLine(plan);
-    ```
-
-1. 在终端中输入 `dotnet run` 以查看所创建计划的输出。
-
-    你应会看到类似于以下输出的模板：
-
-    ```output
-    Plan:
-    {{!-- Step 1: Identify Key Values --}}
-    {{set "location" location}}
-    {{set "addSong" addSong}}
-    {{set "concertRecommendation" concertRecommendation}}
-    {{set "songRecommendation" concertRecommendation}}
-
-    {{!-- Step 2: Use the Right Helpers --}}
-    {{#if addSong}}
-        {{set "song" song}}
-        {{set "artist" artist}}
-        {{set "genre" genre}}
-        {{set "songAdded" (MusicLibraryPlugin-AddToRecentlyPlayed artist=artist song=song genre=genre)}}  
-        {{json songAdded}}
-    {{/if}}
-
-    {{#if concertRecommendation}}
-        {{set "concertSuggested" (Prompts-SuggestConcert location=location recentlyPlayedSongs=recentlyPlayedSongs musicLibrary=musicLibrary)}}
-        {{json concertSuggested}}
-    {{/if}}
-
-    {{#if songRecommendation}}
-        {{set "songSuggested" (SuggestSongPlugin-SuggestSong recentlyPlayedSongs=recentlyPlayedSongs musicLibrary=musicLibrary)}}
-        {{json songSuggested}}
-    {{/if}}
-
-    {{!-- Step 3: Output the Result --}}
-    {{json "Goal achieved"}}
-    ```
-
-     请注意 `{{#if ...}}` 语法。 此语法充当 Handlebars 规划器可以使用的条件语句，类似于 C# 中的传统 `if`-`else` 块。 `if` 语句必须以 `{{/if}}` 结尾。
-
-    接下来，使用这个生成的模板创建你自己的 Handlebars 计划。 
-
-1. 在“文件存储”目录中，使用以下文本创建名为“handlebarsTemplate.txt”的新文件：
-
-    ```output
-    {{set "addSong" addSong}}
-    {{set "concertRecommendation" concertRecommendation}}
-    {{set "songRecommendation" songRecommendation}}
-
-    {{#if addSong}}
-        {{set "song" song}}
-        {{set "artist" artist}}
-        {{set "genre" genre}}
-        {{set addedSong (MusicLibraryPlugin-AddToRecentlyPlayed artist song genre)}}  
-        Output The following content, do not make any modifications:
-        {{json addedSong}}     
-    {{/if}}
-
-    {{#if concertRecommendation}}
-        {{set "location" location}}
-        {{set "concert" (Prompts-SuggestConcert location)}}
-        Output The following content, do not make any modifications:
-        {{json concert}}
-    {{/if}}
-
-    {{#if songRecommendation}}
-        {{set "recentlyPlayedSongs" (MusicLibraryPlugin-GetRecentPlays)}}
-        {{set "musicLibrary" (MusicLibraryPlugin-GetMusicLibrary)}}
-        {{set "song" (SuggestSongPlugin-SuggestSong recentlyPlayedSongs musicLibrary)}}
-        Output The following content, do not make any modifications:
-        {{json song}}
-    {{/if}}
-    ```
-
-    在此模板中，你将向 LLM 添加一条指令，告诉它不要执行任何文本生成，以确保输出由插件严格管理。 现在让我们试用该模板！
-
-### 任务 2：使用 Handlebars 规划器自动给出推荐
-
-在此任务中，你将基于 Handlebars 计划模板创建一个函数，并使用该函数根据用户的输入自动给出推荐。
-
-1. 通过修改现有代码移除 handlebars 计划：
-
-    ```c#
-    using Microsoft.SemanticKernel;
-    using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
-
-    var builder = Kernel.CreateBuilder();
-    builder.AddAzureOpenAIChatCompletion(
-        "your-deployment-name",
-        "your-endpoint",
-        "your-api-key",
-        "deployment-model");
-    var kernel = builder.Build();
-    kernel.ImportPluginFromType<MusicLibraryPlugin>();
-    kernel.ImportPluginFromType<MusicConcertsPlugin>();
-    kernel.ImportPluginFromPromptDirectory("Prompts");
+    OpenAIPromptExecutionSettings settings = new()
+    {
+        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+    };
     
     var songSuggesterFunction = kernel.CreateFunctionFromPrompt(
         promptTemplate: @"Based on the user's recently played music:
@@ -595,59 +471,52 @@ lab:
         recommend a song to the user from the music library:
         {{$musicLibrary}}",
         functionName: "SuggestSong",
-        description: "Suggest a song to the user"
+        description: "Recommend a song from the music library"
     );
 
     kernel.Plugins.AddFromFunctions("SuggestSongPlugin", [songSuggesterFunction]);
+
+    string prompt = "Can you recommend a song from the music library?";
+
+    var autoInvokeResult = await kernel.InvokePromptAsync(prompt, new(settings));
+    Console.WriteLine(autoInvokeResult);
     ```
 
-1. 添加用于读取模板文件并创建函数的代码：
+    在此代码中，将通过提示创建一个函数，告知 LLM 如何建议歌曲。 之后，将其注册到内核并调用启用了自动函数调用设置的提示。 内核能够运行函数并提供正确的参数来完成提示。
+
+1. 在终端中，输入 `dotnet run` 以运行代码。
+
+    生成的输出应根据最近播放的音乐向用户推荐歌曲。 响应可能类似于以下输出：
+    
+    ```
+    Based on your recently played music, I recommend you listen to the song "Luv(sic)". It falls under the genres of hiphop and rap, which aligns with some of your recently played songs. Enjoy!  
+    ```
+
+    接下来，让我们尝试一个提示来更新最近播放的歌曲列表。
+
+1. 使用以下代码更新 Program.cs 文件****：
 
     ```c#
-    string template = File.ReadAllText($"Files/HandlebarsTemplate.txt");
+    string prompt = @"Add this song to the recently played songs list:  title: 'Touch', artist: 'Cat's Eye', genre: 'Pop'";
 
-    var handlebarsPromptFunction = kernel.CreateFunctionFromPrompt(
-        new() {
-            Template = template,
-            TemplateFormat = "handlebars"
-        }, new HandlebarsPromptTemplateFactory()
-    );
+    var result = await kernel.InvokePromptAsync(prompt, new(settings));
+
+    Console.WriteLine(result);
     ```
 
-    在此代码中，你将一个 `Template` 对象连同 `TemplateFormat` 一起传递给内核方法 `CreateFunctionFromPrompt`。 `CreateFunctionFromPrompt` 还接受一个 `IPromptTemplateFactory` 类型，它告知内核如何分析给定模板。 由于你使用的是 Handlebars 模板，你使用的就是 `HandlebarsPromptTemplateFactory` 类型。
+1. 在终端中输入 `dotnet run`
 
-    接下来，让我们使用一些参数来运行函数并查看结果！
+    输出应如下所示：
 
-1. 将以下代码添加到 `Program.cs` 文件：
-
-    ```c#
-    string location = "Redmond WA USA";
-    var templateResult = await kernel.InvokeAsync(handlebarsPromptFunction,
-        new() {
-            { "location", location },
-            { "concertRecommendation", true },
-            { "songRecommendation", false },
-            { "addSong", false },
-            { "artist", "" },
-            { "song", "" },
-            { "genre", "" }
-        });
-
-    Console.WriteLine(templateResult);
+    ```
+    I have added the song 'Touch' by Cat's Eye to the recently played songs list.
     ```
 
-1. 在终端中输入 `dotnet run` 以查看规划器模板的输出。
+    打开 recentlyplayed.txt 文件时，应会看到添加到列表顶部的新歌曲。
+    
 
-    你应该会看到类似于以下输出的响应：
-
-    ```output
-    Based on the user's recently played songs, Ly Hoa seems to be a relevant artist. The closest concert to Redmond WA, USA would be in Portland OR, USA on April 16th, 2024.  
-    ```
-
-    该提示能够根据用户最近播放的音乐列表及其所在位置为用户推荐音乐会。 你还可以尝试将其他变量设置为 true，看看会发生什么情况！
-
-现在，你的代码能够根据用户的输入执行不同的操作。 干得漂亮!
+使用 `AutoInvokeKernelFunctions` 设置可以专注于生成插件以满足用户的需求。 现在，代理能够根据用户的输入执行不同的操作。 干得漂亮!
 
 ### 审阅
 
-在本实验中，你已创建一个 AI 代理，该代理可以管理用户的音乐库并提供个性化的歌曲和音乐会推荐。 你使用语义内核 SDK 生成了该 AI 代理，并将其连接到了大型语言模型 (LLM) 服务。 你为音乐库创建了自定义插件，使用 Handlebars 规划器自动给出了推荐，并基于 Handlebars 计划模板创建了一个函数，以根据用户的输入自动给出推荐。 祝贺你完成本实验！
+在本实验中，你已创建一个 AI 代理，该代理可以管理用户的音乐库并提供个性化的歌曲和音乐会推荐。 你使用语义内核 SDK 生成了该 AI 代理，并将其连接到了大型语言模型 (LLM) 服务。 你为音乐库创建了自定义插件，启用了自动函数调用，使代理动态响应用户的输入。 祝贺你完成本实验！
