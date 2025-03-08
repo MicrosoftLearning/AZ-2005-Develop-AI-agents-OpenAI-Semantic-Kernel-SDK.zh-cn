@@ -75,19 +75,17 @@ lab:
 
 1. 创建资源后，选择“转到资源”****。
 
-1. 在“概述”页上，选择“转到 Azure OpenAI Studio”。********
+1. 在“**概述**”页上，选择“**转到 Azure AI Foundry 门户**”。
 
-:::image type="content" source="../media/model-deployments.png" alt-text="Azure OpenAI 部署页的屏幕截图。":::
+1. 依次选择“**新建部署**”、“**从基础模型**”。
 
-1. 依次选择“创建新部署”、“部署模型”。********
+1. 在模型列表中，选择 **gpt-35-turbo-16k**。
 
-1. 在“选择模型”下，选择“gpt-35-turbo-16k”。********
+1. 选择“确认”
 
-    使用默认模型版本
+1. 输入部署的名称并保留默认选项。
 
-1. 输入部署的名称
-
-1. 部署完成后，导航回 Azure OpenAI 资源。
+1. Azure 门户部署完成后，导航回 Azure 门户中的 Azure OpenAI 资源。
 
 1. 在“资源管理”下，转到“密钥和终结点”********。
 
@@ -99,37 +97,53 @@ lab:
 
 1. 返回到 Visual Studio Code 项目。
 
+1. 打开 **appsettings.json** 文件，并使用 Azure OpenAI 服务模型 ID、终结点和 API 密钥更新值。
+
+    ```json
+    {
+        "modelId": "gpt-35-turbo-16k",
+        "endpoint": "",
+        "apiKey": ""
+    }
+    ```
+
 1. 通过选择“终端” > “新建终端”来打开“终端”********。
 
 1. 在终端中，运行以下命令以安装语义内核 SDK：
 
-    `dotnet add package Microsoft.SemanticKernel --version 1.2.0`
+    `dotnet add package Microsoft.SemanticKernel --version 1.30.0`
+
+1. 1. 在 **Program.cs** 文件中添加以下 `using` 指令：
+
+    ```c#
+    using Microsoft.SemanticKernel;
+    using Microsoft.SemanticKernel.ChatCompletion;
+    using Microsoft.SemanticKernel.Connectors.OpenAI;
+    ```
 
 1. 若要创建内核，请将以下代码添加到“**Program.cs**”文件中：
     
     ```c#
-    using Microsoft.SemanticKernel;
-
+    // Create a kernel builder with Azure OpenAI chat completion
     var builder = Kernel.CreateBuilder();
-    builder.AddAzureOpenAIChatCompletion(
-        "your-deployment-name",
-        "your-endpoint",
-        "your-api-key",
-        "deployment-model");
+    builder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
+
+    // Build the kernel
     var kernel = builder.Build();
     ```
-
-    务必将占位符替换为 Azure 资源中的值。
 
 1. 若要验证内核和终结点是否正常工作，请输入以下代码：
 
     ```c#
-    var result = await kernel.InvokePromptAsync(
-        "Who are the top 5 most famous musicians in the world?");
+    var result = await kernel.InvokePromptAsync("Who are the top 5 most famous musicians in the world?");
     Console.WriteLine(result);
     ```
 
-1. 输入 `dotnet run` 以运行代码，检查是否看到了来自 Azure Open AI 模型的响应，其中包含全球最著名的 5 位音乐家。
+1. 右键单击“**Starter**”文件夹，然后选择“**在集成终端中打开**”。
+
+1. 在终端中，输入 `dotnet run` 以运行代码。
+
+    验证是否看到了来自 Azure Open AI 模型的响应，其中包含全球最著名的 5 位音乐家。
 
     响应来自传递给内核的 Azure Open AI 模型。 语义内核 SDK 能够连接到大型语言模型 (LLM)，并运行提示。 注意从 LLM 接收响应的速度有多快。 语义内核 SDK 使构建智能应用程序变得简单高效。
 
@@ -143,24 +157,20 @@ lab:
 
 在此任务中，你将创建一个插件，用于将歌曲添加到用户的最近播放列表，并获取最近播放的歌曲列表。 为简单起见，最近播放的歌曲存储在一个文本文件中。
 
-1. 在“Lab01-Project”目录中创建一个新文件夹并将其命名为“Plugins”。
-
-1. 在“Plugins”文件夹中，创建新文件“MusicLibraryPlugin.cs”
+1. 在“**Plugins**”文件夹中，创建新文件“**MusicLibraryPlugin.cs**”
 
     首先，创建一些快速函数来获取歌曲并将其添加到用户的“最近播放”列表中。
 
 1. 输入以下代码：
 
     ```c#
-    using System.ComponentModel;
     using System.Text.Json;
     using System.Text.Json.Nodes;
     using Microsoft.SemanticKernel;
 
     public class MusicLibraryPlugin
     {
-        [KernelFunction, 
-        Description("Get a list of music recently played by the user")]
+        [KernelFunction("GetRecentPlays")]
         public static string GetRecentPlays()
         {
             string content = File.ReadAllText($"Files/RecentlyPlayed.txt");
@@ -169,21 +179,18 @@ lab:
     }
     ```
 
-    在此代码中，你使用 `KernelFunction` 修饰器来声明本机函数。 还将使用 `Description` 修饰器来添加函数功能的说明。 用户最近播放的歌曲列表存储在名为“RecentlyPlayed.txt”的文本文件中。 接下来可以添加用于将歌曲添加到列表中的代码。
+    在此代码中，你使用 `KernelFunction` 修饰器来声明本机函数。 对函数使用描述性名称，以便 AI 可以正确调用它。 用户最近播放的歌曲列表存储在名为“RecentlyPlayed.txt”的文本文件中。 接下来可以添加用于将歌曲添加到列表中的代码。
 
 1. 将以下代码添加到 `MusicLibraryPlugin` 类：
 
     ```c#
-    [KernelFunction, Description("Add a song to the recently played list")]
-    public static string AddToRecentlyPlayed(
-        [Description("The name of the artist")] string artist, 
-        [Description("The title of the song")] string song, 
-        [Description("The song genre")] string genre)
+    [KernelFunction("AddToRecentPlays")]
+    public static string AddToRecentlyPlayed(string artist,  string song, string genre)
     {
         // Read the existing content from the file
         string filePath = "Files/RecentlyPlayed.txt";
         string jsonContent = File.ReadAllText(filePath);
-        var recentlyPlayed = (JsonArray) JsonNode.Parse(jsonContent);
+        var recentlyPlayed = (JsonArray) JsonNode.Parse(jsonContent)!;
 
         var newSong = new JsonObject
         {
@@ -192,6 +199,7 @@ lab:
             ["genre"] = genre
         };
 
+        // Insert the new song
         recentlyPlayed.Insert(0, newSong);
         File.WriteAllText(filePath, JsonSerializer.Serialize(recentlyPlayed,
             new JsonSerializerOptions { WriteIndented = true }));
@@ -200,7 +208,7 @@ lab:
     }
     ```
 
-    在此代码中，你创建一个函数，接受“艺术家”、“歌曲”和“流派”作为字符串。 除了函数的 `Description` 之外，你还添加输入变量的说明。 “RecentlyPlayed.txt”文件包含用户最近播放的歌曲的 json 格式列表。 此代码从文件中读取现有内容，对其进行分析，然后将新歌曲添加到列表中。 已更新的列表此后会写回到文件中。
+    在此代码中，你创建一个函数，接受“艺术家”、“歌曲”和“流派”作为字符串。 “RecentlyPlayed.txt”文件包含用户最近播放的歌曲的 json 格式列表。 此代码从文件中读取现有内容，对其进行分析，然后将新歌曲添加到列表中。 已更新的列表此后会写回到文件中。
 
 1. 使用以下代码更新 Program.cs 文件****：
 
@@ -208,20 +216,28 @@ lab:
     var kernel = builder.Build();
     kernel.ImportPluginFromType<MusicLibraryPlugin>();
 
-    var result = await kernel.InvokeAsync(
-        "MusicLibraryPlugin", 
-        "AddToRecentlyPlayed", 
-        new() {
-            ["artist"] = "Tiara", 
-            ["song"] = "Danse", 
-            ["genre"] = "French pop, electropop, pop"
-        }
-    );
-    
-    Console.WriteLine(result);
+    // Get chat completion service.
+    var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+
+    // Create a chat history object
+    ChatHistory chatHistory = [];
     ```
 
-    在此代码中，将使用 ImportPluginFromType 将 MusicLibraryPlugin 导入内核。 然后使用要调用的插件名称和函数名称调用 InvokeAsync。 还可以传入艺术家、歌曲和流派作为参数。
+    在此代码中，将插件导入内核，并添加聊天完成设置。
+
+1. 添加以下提示以调用插件：
+
+    ```c#
+    chatHistory.AddSystemMessage("When a user has played a song, add it to their list of recent plays.");
+    chatHistory.AddSystemMessage("The listener has just played the song Danse by Tiara. It falls under these genres: French pop, electropop, pop.");
+
+    ChatMessageContent reply = await chatCompletionService.GetChatMessageContentAsync(
+        chatHistory,
+        kernel: kernel
+    );
+    Console.WriteLine(reply.ToString());
+    chatHistory.AddAssistantMessage(reply.ToString());
+    ```
 
 1. 通过在终端中输入 `dotnet run` 来运行代码。
 
@@ -233,17 +249,14 @@ lab:
 
     如果打开“Files/RecentlyPlayed.txt”，你应会看到新歌曲已添加到列表中。
 
-> [!NOTE]
-> 如果终端显示 null 值的警告，可以忽略它们，因为它们不会影响结果。
-
 ### 任务 2：提供个性化歌曲推荐
 
 在此任务中，你将创建一条提示，用于根据用户最近播放的歌曲为他们提供个性化的歌曲推荐。 该提示组合本机函数来生成歌曲推荐。 你还将根据提示创建一个函数，使该提示可重复使用。
 
-1. 在 `MusicLibraryPlugin.cs` 文件中，添加以下函数：
+1. 在 **MusicLibraryPlugin.cs** 文件中，添加以下函数：
 
     ```c#
-    [KernelFunction, Description("Get a list of music available to the user")]
+    [KernelFunction("GetMusicLibrary")]
     public static string GetMusicLibrary()
     {
         string dir = Directory.GetCurrentDirectory();
@@ -257,8 +270,7 @@ lab:
 1. 使用以下代码更新 Program.cs 文件****：
 
     ```c#
-    var kernel = builder.Build();
-    kernel.ImportPluginFromType<MusicLibraryPlugin>();
+    chatHistory.AddSystemMessage("When a user has played a song, add it to their list of recent plays.");
     
     string prompt = @"This is a list of music available to the user:
         {{MusicLibraryPlugin.GetMusicLibrary}} 
@@ -273,7 +285,7 @@ lab:
     Console.WriteLine(result);
     ```
 
-在此段代码中，你将本机函数与语义提示相结合。 本机函数将能够检索大型语言模型 (LLM) 无法自行访问的用户数据，而 LLM 则能够基于文本输入生成歌曲建议。
+    首先，可以移除将歌曲追加到列表中的代码。 然后，将本机插件功能与语义提示相结合。 本机函数将能够检索大型语言模型 (LLM) 无法自行访问的用户数据，而 LLM 则能够基于文本输入生成歌曲建议。
 
 1. 若要测试代码，请在终端中输入 `dotnet run`。
 
@@ -302,100 +314,77 @@ lab:
     );
 
     kernel.Plugins.AddFromFunctions("SuggestSongPlugin", [songSuggesterFunction]);
-
-    var result = await kernel.InvokeAsync(songSuggesterFunction);
-    Console.WriteLine(result);
     ```
 
-    在此代码中，你将根据提示创建一个函数，用于向用户建议歌曲。 然后将它添加到内核插件。 最后，告知内核运行该函数。
+    在此代码中，你将从提示创建一个函数，并将其添加到内核插件。
+
+1. 添加以下代码以自动调用函数：
+
+    ```c#
+    OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new() 
+    {
+        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+    };
+
+    chatHistory.AddUserMessage("What song should I play next?");
+
+    reply = await chatCompletionService.GetChatMessageContentAsync(
+        chatHistory,
+        kernel: kernel,
+        executionSettings: openAIPromptExecutionSettings
+    );
+    Console.WriteLine(reply.ToString());
+    chatHistory.AddAssistantMessage(reply.ToString());
+    ```
+
+    在此代码中，你将创建用于启用自动函数调用的设置。 然后，添加将调用函数并检索回复的提示。
 
 ### 任务 3：提供个性化音乐会推荐
 
-在此任务中，你将创建一个用于检索即将举办的音乐会详细信息的插件。 你还将创建一个插件，让 LLM 根据用户最近播放的歌曲和所在位置推荐音乐会。
+在此任务中，你将创建一个插件，让 LLM 根据用户最近播放的歌曲和所在位置推荐音乐会。
 
-1. 在“Plugins”文件夹中，创建一个名为“MusicConcertPlugin.cs”的新文件
-
-1. 在“MusicConcertsPlugin”文件中，添加以下代码：
-
-    ```c#
-    using System.ComponentModel;
-    using Microsoft.SemanticKernel;
-
-    public class MusicConcertsPlugin
-    {
-        [KernelFunction, Description("Get a list of upcoming concerts")]
-        public static string GetConcerts()
-        {
-            string content = File.ReadAllText($"Files/ConcertDates.txt");
-            return content;
-        }
-    }
-    ```
-
-    在此代码中，你将创建一个函数，用于从名为“ConcertDates.txt”文件读取即将举办的音乐会列表。 该文件包含即将举办的音乐会的 json 格式列表。 接下来，需要创建一条提示，让 LLM 推荐音乐会。
-
-1. 在“Prompts”文件夹中，创建一个名为“SuggestConcert”的新文件夹
-
-1. 在“SuggestConcert”文件夹中创建一个“config.json”文件，其中包含以下内容：
-
-    ```json
-    {
-        "schema": 1,
-        "type": "completion",
-        "description": "Suggest a concert to the user",
-        "execution_settings": {
-            "default": {
-                "max_tokens": 4000,
-                "temperature": 0
-            }
-        },
-        "input_variables": [
-            {
-                "name": "location",
-                "description": "The user's location",
-                "required": true
-            }
-        ]
-    }
-    ```
-
-1. 在“SuggestConcert”文件夹中创建一个“skprompt.txt”文件，其中包含以下内容：
-
-    ```output
-    This is a list of the user's recently played songs:
-    {{MusicLibraryPlugin.GetRecentPlays}}
-
-    This is a list of upcoming concert details:
-    {{MusicConcertsPlugin.GetConcerts}}
-
-    Suggest an upcoming concert based on the user's recently played songs. 
-    The user lives in {{$location}}, 
-    please recommend a relevant concert that is close to their location.
-    ```
-
-    此提示有助于 LLM 筛选用户的输入，并从文本中仅检索目的地。 接下来，测试插件以验证输出。
-
-1. 打开“**Program.cs**”文件并使用以下代码更新它：
+1. 在 **Program.cs** 文件中，将音乐会插件添加到内核：
 
     ```c#
     var kernel = builder.Build();    
     kernel.ImportPluginFromType<MusicLibraryPlugin>();
     kernel.ImportPluginFromType<MusicConcertsPlugin>();
-    var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
+    ```
 
-    var songSuggesterFunction = kernel.CreateFunctionFromPrompt(
-    // code omitted for brevity
+1. 添加代码以根据提示创建函数：
+
+    ```c#
+    var concertSuggesterFunction = kernel.CreateFunctionFromPrompt(
+        promptTemplate: @"This is a list of the user's recently played songs:
+        {{MusicLibraryPlugin.GetRecentPlays}}
+
+        This is a list of upcoming concert details:
+        {{MusicConcertsPlugin.GetConcerts}}
+
+        Suggest an upcoming concert based on the user's recently played songs. 
+        The user lives in {{$location}}, 
+        please recommend a relevant concert that is close to their location.",
+        functionName: "SuggestConcert",
+        description: "Suggest a concert to the user"
     );
 
-    kernel.Plugins.AddFromFunctions("SuggestSongPlugin", [songSuggesterFunction]);
+    kernel.Plugins.AddFromFunctions("SuggestConcertPlugin", [concertSuggesterFunction]);
+    ```
 
-    string location = "Redmond WA USA";
-    var result = await kernel.InvokeAsync<string>(prompts["SuggestConcert"],
-        new() {
-            { "location", location }
-        }
+    此函数提示会获取音乐库和即将推出的音乐会信息以及用户的位置，并提供建议。
+
+1. 添加以下提示以调用新插件函数：
+
+    ```c#
+    chatHistory.AddUserMessage("Can you recommend a concert for me? I live in Washington");
+
+    reply = await chatCompletionService.GetChatMessageContentAsync(
+        chatHistory,
+        kernel: kernel,
+        executionSettings: openAIPromptExecutionSettings
     );
-    Console.WriteLine(result);
+    Console.WriteLine(reply.ToString());
+    chatHistory.AddAssistantMessage(reply.ToString());
     ```
 
 1. 在终端中输入 `dotnet run`
@@ -403,119 +392,12 @@ lab:
     应会看到类似于以下响应的输出：
 
     ```output
-    Based on the user's recently played songs and their location in Redmond WA USA, a relevant concert recommendation would be the upcoming concert of Lisa Taylor in Seattle WA, USA on February 22, 2024. Lisa Taylor is an indie-folk artist, and her music genre aligns with the user's recently played songs, such as "Loanh Quanh" by Ly Hoa. Additionally, Seattle is close to Redmond, making it a convenient location for the user to attend the concert.
+    I recommend you attend the concert of Lisa Taylor. She will be performing in Seattle, Washington, USA on 2/22/2024. Enjoy the show!
     ```
-
-    尝试调整提示和位置，查看可以生成哪些其他结果。
-
-## 练习 3：基于用户输入自动执行建议
-
-可以改为使用自动函数调用来避免手动调用插件函数。 LLM 将自动选择并合并注册到内核的插件以实现目标。 在本练习中，你将启用自动函数调用以自动执行建议。
-
-完成练习估计所需时间****：10 分钟
-
-### 任务 1：基于用户输入自动执行建议
-
-在此任务中，启用自动函数调用，以基于用户的输入生成建议。
-
-1. 在“**Program.cs**”文件中，将代码更新为以下内容：
-
-    ```c#
-    using Microsoft.SemanticKernel;
-    using Microsoft.SemanticKernel.Connectors.OpenAI;
     
-    var builder = Kernel.CreateBuilder();
-    builder.AddAzureOpenAIChatCompletion(
-        "your-deployment-name",
-        "your-endpoint",
-        "your-api-key",
-        "deployment-model");
-    var kernel = builder.Build();
-    kernel.ImportPluginFromType<MusicLibraryPlugin>();
-    kernel.ImportPluginFromType<MusicConcertsPlugin>();
-    kernel.ImportPluginFromPromptDirectory("Prompts");
+    来自 LLM 的回复可能会有所不同。 尝试调整提示和位置，查看可以生成哪些其他结果。
 
-    OpenAIPromptExecutionSettings settings = new()
-    {
-        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-    };
-    
-    string prompt = @$"Based on the user's recently played music, suggest a 
-        concert for the user living in ${location}";
-
-    var autoInvokeResult = await kernel.InvokePromptAsync(prompt, new(settings));
-    Console.WriteLine(autoInvokeResult);
-    ```
-
-1. 在终端中输入 `dotnet run`
-
-    你应该会看到类似于以下输出的响应：
-
-    ```output
-    Based on the user's recently played songs, the artist "Mademoiselle" has an upcoming concert in Seattle WA, USA on February 22, 2024, which is close to Redmond WA. Therefore, the recommended concert for the user would be Mademoiselle's concert in Seattle.
-    ```
-
-    语义内核能够使用正确的参数自动调用 `SuggestConcert` 函数。 现在，代理能够根据用户最近播放的音乐列表及其所在位置为用户推荐音乐会。 接下来，可以添加对音乐建议的支持。
-
-1. 使用以下代码更新 **Program.cs** 文件：
-
-    ```c#
-    OpenAIPromptExecutionSettings settings = new()
-    {
-        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-    };
-    
-    var songSuggesterFunction = kernel.CreateFunctionFromPrompt(
-        promptTemplate: @"Based on the user's recently played music:
-        {{$recentlyPlayedSongs}}
-        recommend a song to the user from the music library:
-        {{$musicLibrary}}",
-        functionName: "SuggestSong",
-        description: "Recommend a song from the music library"
-    );
-
-    kernel.Plugins.AddFromFunctions("SuggestSongPlugin", [songSuggesterFunction]);
-
-    string prompt = "Can you recommend a song from the music library?";
-
-    var autoInvokeResult = await kernel.InvokePromptAsync(prompt, new(settings));
-    Console.WriteLine(autoInvokeResult);
-    ```
-
-    在此代码中，将通过提示创建一个函数，告知 LLM 如何建议歌曲。 之后，将其注册到内核并调用启用了自动函数调用设置的提示。 内核能够运行函数并提供正确的参数来完成提示。
-
-1. 在终端中，输入 `dotnet run` 以运行代码。
-
-    生成的输出应根据最近播放的音乐向用户推荐歌曲。 响应可能类似于以下输出：
-    
-    ```
-    Based on your recently played music, I recommend you listen to the song "Luv(sic)". It falls under the genres of hiphop and rap, which aligns with some of your recently played songs. Enjoy!  
-    ```
-
-    接下来，让我们尝试一个提示来更新最近播放的歌曲列表。
-
-1. 使用以下代码更新 Program.cs 文件****：
-
-    ```c#
-    string prompt = @"Add this song to the recently played songs list:  title: 'Touch', artist: 'Cat's Eye', genre: 'Pop'";
-
-    var result = await kernel.InvokePromptAsync(prompt, new(settings));
-
-    Console.WriteLine(result);
-    ```
-
-1. 在终端中输入 `dotnet run`
-
-    输出应如下所示：
-
-    ```
-    I have added the song 'Touch' by Cat's Eye to the recently played songs list.
-    ```
-
-    打开 recentlyplayed.txt 文件时，应会看到添加到列表顶部的新歌曲。
-    
-
-使用 `AutoInvokeKernelFunctions` 设置可以专注于生成插件以满足用户的需求。 现在，代理能够根据用户的输入执行不同的操作。 干得漂亮!
+现在，代理能够根据用户的输入执行不同的操作。 干得漂亮!
 
 ### 审阅
 
