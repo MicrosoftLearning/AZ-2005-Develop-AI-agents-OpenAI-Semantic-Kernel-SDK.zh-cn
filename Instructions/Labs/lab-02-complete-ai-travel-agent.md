@@ -4,14 +4,14 @@ lab:
   module: 'Module 01: Build your kernel'
 ---
 
-# 实验室：完成 AI 旅行服务代理
+# 实验室：完成 AI 旅行助手
 # 学生实验室手册
 
-在本实验中，你将使用语义内核 SDK 完成一个 AI 旅行服务代理。 你将为大型语言模型 (LLM) 服务创建一个终结点，创建语义内核函数，并使用语义内核 SDK 的自动函数调用功能将用户意图路由到相应的插件，包括现有的一些预生成插件。 你还将使用对话历史记录为 LLM 提供上下文，并允许用户继续对话。
+在本实验中，你将使用语义内核 SDK 完成 AI 旅行助手。 你将为大型语言模型 (LLM) 服务创建一个终结点，创建语义内核函数，并使用语义内核 SDK 的自动函数调用功能将用户意图路由到相应的插件，包括现有的一些预生成插件。 你还将使用对话历史记录为 LLM 提供上下文，并允许用户继续对话。
 
 ## 实验室场景
 
-你是某家旅行社的开发人员，专门为客户打造个性化的旅行体验。 你的任务是创建一个 AI 旅行服务代理，以帮助客户详细了解旅行目的地并规划行程活动。 该 AI 旅行服务代理能够换算货币金额、推荐目的地和活动、以不同的语言提供有用短语以及翻译短语。 该 AI 旅行服务代理还能够利用对话历史记录为用户请求提供区分上下文的响应。
+你是某家旅行社的开发人员，专门为客户打造个性化的旅行体验。 你的任务是创建 AI 旅行助手，以帮助客户详细了解旅行目的地并规划行程活动。 该 AI 旅行助手能够换算货币金额、推荐目的地和活动、提供不同语言的有用短语并翻译短语。 AI 旅行助手还应该能够利用对话历史记录，针对用户的请求提供与上下文相关的回复。
 
 ## 目标
 
@@ -92,7 +92,7 @@ lab:
 
 ### 任务 2：创建本机插件
 
-在此任务中，将创建一个本机函数插件，用于将基准货币金额换算成目标货币金额。
+在此任务中，你将创建一个本机函数插件，可以实现从基准货币到目标货币的金额换算。
 
 1. 返回到 Visual Studio Code 项目。
 
@@ -106,29 +106,30 @@ lab:
     }
     ```
 
-1. 导航到 **Plugins/ConvertCurrency** 文件夹中名为 **CurrencyConverter.cs** 的文件
+1. 导航至 **Plugins** 文件夹中名为 **CurrencyConverterPlugin.cs** 的文件
 
-1. 在 CurrencyConverter.cs**** 文件中，添加以下代码以创建插件函数：
+1. 在 **CurrencyConverterPlugin.cs** 文件中，在注释“**Create a kernel function that gets the exchange rate**”下添加以下代码：
 
     ```c#
-    class CurrencyConverter
+    // Create a kernel function that gets the exchange rate
+    [KernelFunction("convert_currency")]
+    [Description("Converts an amount from one currency to another, for example USD to EUR")]
+    public static decimal ConvertCurrency(decimal amount, string fromCurrency, string toCurrency)
     {
-        [KernelFunction("convert_currency")]
-        [Description("Converts an amount from one currency to another, for example USD to EUR")]
-        public static decimal ConvertCurrency(decimal amount, string fromCurrency, string toCurrency)
-        {
-            decimal exchangeRate = GetExchangeRate(fromCurrency, toCurrency);
-            return amount * exchangeRate;
-        }
+        decimal exchangeRate = GetExchangeRate(fromCurrency, toCurrency);
+        return amount * exchangeRate;
     }
     ```
 
     在此段代码中，你将使用 **KernelFunction** 修饰器来声明本机函数。 还将使用**说明**修饰器来添加函数功能的说明。 接下来，添加一些逻辑来实现从一种货币到另一种货币的给定金额换算。
 
-1. 在 **Program.cs** 文件中，使用以下代码导入新插件：
+1. 打开 Program.cs 文件
+
+1. 在注释“**将插件添加到内核**”下导入货币转换器插件：
 
     ```c#
-    kernel.ImportPluginFromType<CurrencyConverter>();
+    // Add plugins to the kernel
+    kernel.ImportPluginFromType<CurrencyConverterPlugin>();
     ```
 
     接下来，让我们测试插件。
@@ -147,7 +148,7 @@ lab:
 
 ## 练习 2：创建 Handlebars 提示
 
-在本练习中，你将从 Handlebars 提示中创建一个函数。 该函数将提示 LLM 为用户创建旅行迭代器。 现在就开始吧！
+在本练习中，你将从 Handlebars 提示中创建一个函数。 该函数将提示 LLM 为用户创建旅行行程。 现在就开始吧！
 
 完成练习估计所需时间****：10 分钟
 
@@ -157,23 +158,22 @@ lab:
 
     `using Microsoft.SemanticKernel.PromptTemplates.Handlebars;`
 
-1. 使用以下代码更新 Program.cs 文件****：
+1. 在注释“**创建 handlebars 提示**”下添加以下代码：
 
     ```c#
-    kernel.ImportPluginFromType<CurrencyConverterPlugin>();
-
+    // Create a handlebars prompt
     string hbprompt = """
-        <message role="system">Instructions: Before providing the the user with a travel itenerary, ask how many days their trip is</message>
-        <message role="user">I'm going to {{city}}. Can you create an itenerary for me?</message>
+        <message role="system">Instructions: Before providing the user with a travel itinerary, ask how many days their trip is</message>
+        <message role="user">I'm going to {{city}}. Can you create an itinerary for me?</message>
         <message role="assistant">Sure, how many days is your trip?</message>
         <message role="user">{{input}}</message>
         <message role="assistant">
         """;
     ```
 
-    在此代码中，你将使用 Handlebars 模板格式创建少样本提示。 提示将引导模型在创建旅行迭代之前从用户检索更多信息。
+    在此代码中，你将使用 Handlebars 模板格式创建少样本提示。 提示将引导模型在创建旅行行程之前从用户检索更多信息。
 
-1. 将以下代码添加到 Program.cs 文件：
+1. 在注释“**使用 handlebars 格式创建提示模板配置**”下添加以下代码：
 
     ```c#
     // Create the prompt template config using handlebars format
@@ -182,26 +182,30 @@ lab:
     {
         Template = hbprompt,
         TemplateFormat = "handlebars",
-        Name = "GetItenerary",
+        Name = "GetItinerary",
     };
-
-    // Create a plugin from the prompt
-    var promptFunction = kernel.CreateFunctionFromPrompt(promptTemplateConfig, templateFactory);
-    var iteneraryPlugin = kernel.CreatePluginFromFunctions("TravelItenerary", [promptFunction]);
-
-    // Add the new plugin to the kernel
-    kernel.Plugins.Add(iteneraryPlugin);
     ```
 
-    在此代码中，将从提示中创建 Handlebars 模板配置。 然后，为提示创建一个插件函数，并将其添加到内核。 现在，你已准备就绪，可调用函数。
+    此代码从提示中创建 Handlebars 模板配置。 可以使用它创建插件函数。
+
+1. 在注释“**从提示创建插件函数**”下添加以下代码： 
+
+    ```c#
+    // Create a plugin function from the prompt
+    var promptFunction = kernel.CreateFunctionFromPrompt(promptTemplateConfig, templateFactory);
+    var itineraryPlugin = kernel.CreatePluginFromFunctions("TravelItinerary", [promptFunction]);
+    kernel.Plugins.Add(itineraryPlugin);
+    ```
+
+    此代码为提示创建一个插件函数，并将其添加到内核。 现在，你已准备就绪，可调用函数。
 
 1. 在终端中，输入 `dotnet run` 以运行代码。
 
-    请尝试以下输入，提示 LLM 输入迭代。
+    请尝试以下输入，提示 LLM 提供行程。
 
     ```output
     Assistant: How may I help you?
-    User: I'm going to Hong Kong, can you create an itenerary for me?
+    User: I'm going to Hong Kong, can you create an itinerary for me?
     Assistant: Sure! How many days will you be staying in Hong Kong?
     User: 10
     Assistant: Great! Here's a 10-day itinerary for your trip to Hong Kong:
@@ -210,20 +214,20 @@ lab:
 
     现在，你有了 AI 旅行助手的雏形！ 让我们使用提示和插件来添加更多功能
 
-1.  将以下代码添加到 Program.cs 文件：
+1.  在注释“**将插件添加到内核**”下添加航班预订插件：
 
     ```c#
+    // Add plugins to the kernel
     kernel.ImportPluginFromType<CurrencyConverterPlugin>();
     kernel.ImportPluginFromType<FlightBookingPlugin>();
     ```
 
     此插件使用带有模拟详细信息的 **flights.json** 文件模拟外部测试版预订。 接下来，向助手添加一些其他系统提示。
 
-1.  将以下代码添加到 Program.cs 文件：
+1.  在注释“**向聊天添加系统消息**”下添加以下代码：
 
     ```c#
-    // Setup the assistant chat
-    var history = new ChatHistory();
+    // Add system messages to the chat
     history.AddSystemMessage("The current date is 01/10/2025");
     history.AddSystemMessage("You are a helpful travel assistant.");
     history.AddSystemMessage("Before providing destination recommendations, ask the user about their budget.");
@@ -237,7 +241,7 @@ lab:
 
     ```output
     1. Can you give me some destination recommendations for Europe?
-    2. I want to go to Barcelona, can you create an itenerary for me?
+    2. I want to go to Barcelona, can you create an itinerary for me?
     3. How many Euros is 100 USD?
     4. Can you book me a flight to Barcelona?
     ```
@@ -246,7 +250,7 @@ lab:
 
 ## 练习 3：要求用户同意操作
 
-在本练习中，你将添加一个筛选器调用函数，该函数将在允许代理代表用户预订外部测试版之前请求用户的批准。 现在就开始吧！
+在本练习中，你将添加一个筛选器调用函数，该函数将在允许助手代表用户预订航班之前请求用户的批准。 现在就开始吧！
 
 ### 任务 1：创建函数调用筛选器
 
@@ -262,7 +266,9 @@ lab:
     {
         public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
         {
+            // Check the plugin and function names
             
+            await next(context);
         }
     }
     ```
@@ -270,17 +276,18 @@ lab:
     >[!NOTE] 
     > 在语义内核 SDK 版本 1.30.0 中，函数筛选器可能会更改，需要警告抑制。 
 
-    在此代码中，将实现 `IFunctionInvocationFilter` 接口。 每当从 AI 代理调用函数时，始终调用 `OnFunctionInvocationAsync` 方法。
+    在此代码中，将实现 `IFunctionInvocationFilter` 接口。 每当从 AI 助手调用函数时，始终调用 `OnFunctionInvocationAsync` 方法。
 
 1. 添加以下代码以检测何时调用 `book_flight` 函数：
 
     ```c#
-    if ((context.Function.PluginName == "FlightBooking" && context.Function.Name == "book_flight"))
+    // Check the plugin and function names
+    if ((context.Function.PluginName == "FlightBookingPlugin" && context.Function.Name == "book_flight"))
     {
-    
-    }
+        // Request user approval
 
-    await next(context);
+        // Proceed if approved
+    }
     ```
 
     此代码使用 `FunctionInvocationContext` 确定调用的插件和函数。
@@ -288,29 +295,25 @@ lab:
 1. 添加以下逻辑以请求用户预订外部测试版的权限：
 
     ```c#
-    if ((context.Function.PluginName == "FlightBooking" && context.Function.Name == "book_flight"))
+    // Request user approval
+    Console.WriteLine("System Message: The assistant requires an approval to complete this operation. Do you approve (Y/N)");
+    Console.Write("User: ");
+    string shouldProceed = Console.ReadLine()!;
+
+    // Proceed if approved
+    if (shouldProceed != "Y")
     {
-        Console.WriteLine("System Message: The agent requires an approval to complete this operation. Do you approve (Y/N)");
-        Console.Write("User: ");
-        string shouldProceed = Console.ReadLine()!;
-
-        if (shouldProceed != "Y")
-        {
-            context.Result = new FunctionResult(context.Result, "The operation was not approved by the user");
-            return;
-        }
+        context.Result = new FunctionResult(context.Result, "The operation was not approved by the user");
+        return;
     }
-
-    await next(context);
     ```
 
 1. 导航到 **Program.cs** 文件。
 
-1. 使用以下代码将权限筛选器添加到内核：
+1. 在注释“**将筛选器添加到内核**”下添加以下代码：
 
     ```c#
-    kernel.ImportPluginFromType<CurrencyConverterPlugin>();
-    kernel.ImportPluginFromType<FlightBookingPlugin>();
+    // Add filters to the kernel
     kernel.FunctionInvocationFilters.Add(new PermissionFilter());
     ```
 
@@ -322,13 +325,13 @@ lab:
     User: Find me a flight to Tokyo on the 19
     Assistant: I found a flight to Tokyo on the 19th of January. The flight is with Air Japan and the price is $1200.
     User: Y
-    System Message: The agent requires an approval to complete this operation. Do you approve (Y/N)
+    System Message: The assistant requires an approval to complete this operation. Do you approve (Y/N)
     User: N
     Assistant: I'm sorry, but I am unable to book the flight for you.
     ```
 
-    在继续任何预订之前，代理应要求用户审批。
+    在继续任何预订之前，助手应要求用户审批。
 
 ### 审阅
 
-在此实验室中，为大型语言模型 (LLM) 服务创建了一个终结点，构建了一个语义内核对象，并使用语义内核 SDK 运行提示。 还创建了插件，并利用系统消息来设置模型。 祝贺你完成本实验！
+在此实验室中，为大型语言模型 (LLM) 服务创建了一个终结点，构建了一个语义内核对象，并使用语义内核 SDK 运行提示。 还创建了插件，并利用系统消息来引导模型。 祝贺你完成本实验！
