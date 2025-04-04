@@ -189,7 +189,7 @@ lab:
 
 1. 导航到 **Program.cs** 文件。
 
-1. 在“**将插件导入内核**”下添加以下代码：
+1. 在注释“**Import plugins to the kernel**”下添加以下代码：
 
     ```c#
     // Import plugins to the kernel
