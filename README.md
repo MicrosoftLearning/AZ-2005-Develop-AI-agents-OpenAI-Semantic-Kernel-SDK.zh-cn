@@ -1,36 +1,13 @@
-#README
+# 使用 Azure OpenAI 和语义内核 SDK 开发生成式 AI 解决方案
 
-We've turned off the ability to report issues directly on this repo and do not monitor PRs.
+此存储库中的练习旨在为你提供动手学习体验，你将在其中探索开发人员使用语义内核和 Azure OpenAI 生成生成式 AI 解决方案时执行的常见任务。
 
-Provide feedback here: https://aka.ms/provide-feedback
+> **备注**：要完成这些练习，需要一个 Azure 订阅，其中包含足够的权限和配额以预配必要的 Azure 资源和生成式 AI 模型。 如果还没有 Azure 订阅，请注册 [Azure 帐户](https://azure.microsoft.com/free)。 针对新用户提供免费试用选项，其中包括前 30 天的积分。
 
-Or, if you are a trainer with a microsoft.com email address, please create a ticket in AzDO.
+在[此存储库的 GitHub Pages 站点](https://go.microsoft.com/fwlink/?linkid=2318531)中查看练习。
 
-# INF99X：示例课程
+> **备注**：虽然可以自行完成这些练习，但它们旨在补充有关 [Microsoft Learn](https://learn.microsoft.com/training/paths/develop-ai-agents-azure-open-ai-semantic-kernel-sdk/) 的模块；在其中可更深入地了解这些练习所基于的一些基础概念。
 
-**你是 MCT 吗？** - 查看 [MCT GitHub 用户指南](https://microsoftlearning.github.io/MCT-User-Guide/)
+## 报告问题
 
-## 我们要做什么？
-
-- 为支持此课程，我们需要经常更新课程内容，使其与课程中使用的 Microsoft 服务保持同步。 我们将在 GitHub 上发布实验指导和实验文件，以便课程作者和 MCT（Microsoft 认证培训师）之间进行开放式贡献，使内容与产品变更保持同步。
-
-- 我们希望这能为实验带来前所未有的协作感--当 Azure 或 Microsoft 365 等 Microsoft 服务发生变化时，如果您在实时交付过程中首先发现了这一变化，就可以直接在实验源中进行增强。 帮助你的 MCT 伙伴们。
-
-## 我应该如何使用该资源库？
-
-- 在讲授课程内容时，主要参考的是讲师教材。
-
-- GitHub 上的这些文件旨在用于使用托管实验室环境的课程实验室。
-
-- 建议每次授课时，培训师都要查看 GitHub，了解为支持最新的 Microsoft 云服务而可能做出的任何更改，并获取最新文件用于授课。
-
-## 如何处理对学生手册的更改？
-
-- 我们将每季度检查一次学员手册，并根据需要通过正常的 MOC（微软官方课程）发布渠道进行更新。
-
-## 如何参与内容编辑？
-
-- 任何 MCT（微软认证培训师）都可以对 GitHub 转载的代码或内容提交拉取请求。 Microsoft 和课程作者将根据需要进行分类，包括内容和实验室代码更改。
-然后，Microsoft 和课程作者将根据需要对内容和实验代码进行分流和修改。
-
-- 您可以提交错误、更改、改进和想法。 先于发现 Azure 或 Microsoft 365 的新功能？ 提交新演示！
+如果在练习中遇到任何问题，请将其报告为此存储库中的**问题**。
