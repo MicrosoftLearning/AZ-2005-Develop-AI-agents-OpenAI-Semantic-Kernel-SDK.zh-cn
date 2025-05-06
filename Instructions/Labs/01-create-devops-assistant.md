@@ -1,14 +1,11 @@
 ---
 lab:
-  title: 使用语义内核创建 AI 助手
-  description: 了解如何使用语义内核生成可执行 DevOps 任务的生成式 AI 助手。
+  title: 使用语义内核 SDK 创建 Devops 助手
 ---
 
-# 使用语义内核创建 AI 助手
+# 使用语义内核 SDK 创建 Devops 助手
 
-在本实验室中，你将开发 AI 支持的助手的代码，旨在自动执行开发运营并帮助简化任务。 你将使用语义内核 SDK 生成该 AI 助手，并将其连接到大型语言模型 (LLM) 服务。 使用语义内核 SDK，能够创建一个可与 LLM 服务交互、对自然语言查询作出响应并为用户提供个性化见解的智能应用程序。 在本练习中，提供了模拟函数来表示典型的 DevOps 任务。 现在就开始吧！
-
-此练习大约需要 **30** 分钟。
+在此实验室中，你将为 TODO 的 AI 助手创建代码。 你将使用语义内核 SDK 生成该 AI 助手，并将其连接到大型语言模型 (LLM) 服务。 使用语义内核 SDK，能够创建一个可与 LLM 服务交互并为用户提供个性化推荐的智能应用程序。
 
 ## 部署聊天完成模型
 
@@ -22,7 +19,7 @@ lab:
 
 1. 依次选择“**新建部署**”、“**从基础模型**”。
 
-1. 在模型列表中搜索 **gpt-4o**，然后选择并确认。
+1. 在模型列表上搜索“**GPT-4o**”，然后选择并确认。
 
 1. 输入部署的名称并保留默认选项。
 
@@ -120,7 +117,7 @@ lab:
     }
     ```
 
-1. 更新值后，使用 **Ctrl+S** 命令保存更改，然后使用 **Ctrl+Q** 命令关闭代码编辑器，同时使 Cloud Shell 命令行保持打开状态。
+1. 更新值后，使用 **CTRL+S** 命令保存更改，然后使用 **CTRL+Q** 命令关闭代码编辑器，同时保持 Cloud Shell 命令行打开状态。
 
 ## 创建语义内核插件
 
@@ -157,7 +154,7 @@ lab:
     var kernel = builder.Build();
     ```
 
-1. 在文件底部附近，找到注释“**创建内核函数以生成阶段环境**”，并添加以下代码以创建将生成过渡环境的模拟插件函数：
+1. 在文件底部附近，查找注释“**创建内核函数以生成阶段环境**”，并添加以下代码以创建将生成过渡环境的模拟插件 functin：
 
     **Python**
     ```python
@@ -179,7 +176,7 @@ lab:
 
     `KernelFunction`修饰器声明本机函数。 对函数使用描述性名称，以便 AI 可以正确调用它。 
 
-1. 导航到注释“**将插件导入内核**”，然后添加以下代码：
+1. 导航到注释“**将插件导入内核**”并添加以下代码：
 
     **Python**
     ```python
@@ -214,7 +211,7 @@ lab:
 
     使用此设置将允许内核自动调用函数，而无需在提示符中指定它们。
 
-1. 在注释“**创建历史聊天记录**”下添加以下代码：
+1. 在注释“**创建聊天历史记录**”下添加以下代码：
 
     **Python**
     ```python
@@ -235,17 +232,17 @@ lab:
 
 ## 运行 DevOps 助手代码
 
-1. 在 Cloud Shell 命令行窗格中，输入以下命令以登录 Azure。
+1. 在 Cloud Shell 命令行窗格中，输入以下命令以登录到 Azure。
 
     ```
     az login
     ```
 
-    **<font color="red">你需要登录到 Azure，即便 cloud shell 会话已通过身份验证。</font>**
+    **<font color="red">必须登录到 Azure - 即使已对 Cloud Shell 会话进行身份验证。</font>**
 
-    > **备注**：在大多数情况下，仅使用 *AZ 登录*就足够了。 但是，如果你的订阅分布在多个租户中，可能需要使用 *--tenant* 参数来指定租户。 有关详细信息，请参阅[使用 Azure CLI 以交互方式登录到 Azure](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively)。
+    > **备注**：在大多数情况下，仅使用 *az login* 就足够了。 但是，如果在多个租户中有订阅，则可能需要使用 *--tenant* 参数指定租户。 有关详细信息，请参阅[使用 Azure CLI 以交互方式登录到 Azure](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively)。
 
-1. 出现提示时，请按照说明在新选项卡中打开登录页，并输入提供的身份验证代码和 Azure 凭据。 然后在命令行中完成登录过程，选择包含 Azure AI Foundry 中心的订阅（如果出现提示）。
+1. 出现提示时，请按照说明在新选项卡中打开登录页，并输入提供的身份验证代码和 Azure 凭据。 然后在命令行中完成登录过程，出现提示时选择包含 Azure AI Foundry 中心的订阅。
 
 1. 登录后，输入以下命令来运行应用程序：
 
@@ -260,7 +257,7 @@ lab:
     dotnet run
     ```
 
-1. 出现提示时，输入以下提示 `Please build the stage environment`
+1. 出现提示时，输入以下提示`Please build the stage environment`
 
 1. 你应该会看到类似于以下输出的响应：
 
@@ -268,7 +265,7 @@ lab:
     Assistant: The stage environment has been successfully built.
     ```
 
-1. 接下来，输入以下提示 `Please deploy the stage environment`
+1. 接下来，输入以下提示`Please deploy the stage environment`
 
 1. 你应该会看到类似于以下输出的响应：
 
@@ -278,9 +275,9 @@ lab:
 
 1. 按 <kbd>Enter</kbd> 结束程序。
 
-## 从提示创建内核函数
+## 根据提示创建内核函数
 
-1. 在注释 `Create a kernel function to deploy the staging environment` 下，添加以下代码：
+1. 在注释`Create a kernel function to deploy the staging environment`下，添加以下代码
 
      **Python**
     ```python
@@ -314,7 +311,7 @@ lab:
 
 1. 使用 **Ctrl+S** 命令保存对代码文件的更改。
 
-1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用程序：
+1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用：
 
     **Python**
     ```
@@ -326,7 +323,7 @@ lab:
     dotnet run
     ```
 
-1. 出现提示时，输入以下提示 `Please deploy the stage environment`
+1. 出现提示时，输入以下提示`Please deploy the stage environment`
 
 1. 你应该会看到类似于以下输出的响应：
 
@@ -334,7 +331,7 @@ lab:
     Assistant: The stage environment cannot be deployed because the earlier stage build failed due to unit test errors. Deploying a faulty build to stage may cause eventual issues and compromise the environment.
     ```
 
-    来自 LLM 的响应可能会有所不同，但仍会阻止你部署阶段站点。
+    来自 LLM 的响应可能会有所不同，但仍会阻止你部署暂存站点。
 
 ## 创建 Handlebars 提示
 
@@ -423,7 +420,7 @@ lab:
 
 1. 使用 **Ctrl+S** 命令保存对代码文件的更改。
 
-1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用程序：
+1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用：
 
     **Python**
     ```
@@ -460,7 +457,6 @@ lab:
 
     **Python**
     ```python
-    # Create a function filter
     async def permission_filter(context: FunctionInvocationContext, next: Callable[[FunctionInvocationContext], Awaitable[None]]) -> None:
         await next(context)
         result = context.result
@@ -553,7 +549,7 @@ lab:
 
 1. 使用 **Ctrl+S** 命令保存对代码文件的更改。
 
-1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用程序：
+1. 在 Cloud Shell 命令行窗格中，输入以下命令以运行应用：
 
     **Python**
     ```
