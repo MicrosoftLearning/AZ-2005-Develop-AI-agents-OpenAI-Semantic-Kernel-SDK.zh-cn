@@ -1,3 +1,5 @@
+**⚠️ This GitHub repo will retire on 28th November 2025.** 
+
 # 使用 Azure OpenAI 和语义内核 SDK 开发生成式 AI 解决方案
 
 此存储库中的练习旨在为你提供动手学习体验，你将在其中探索开发人员使用语义内核和 Azure OpenAI 生成生成式 AI 解决方案时执行的常见任务。
