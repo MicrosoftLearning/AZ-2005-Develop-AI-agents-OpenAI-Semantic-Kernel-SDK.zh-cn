@@ -1,33 +1,42 @@
 ---
 lab:
-  title: 使用语义内核 SDK 创建 Devops 助手
+  title: 使用语义内核创建 AI 助手
+  description: 了解如何使用语义内核生成可执行 DevOps 任务的生成式 AI 助手。
 ---
 
-# 使用语义内核 SDK 创建 Devops 助手
+# 使用语义内核创建 AI 助手
 
-在此实验室中，你将为 TODO 的 AI 助手创建代码。 你将使用语义内核 SDK 生成该 AI 助手，并将其连接到大型语言模型 (LLM) 服务。 使用语义内核 SDK，能够创建一个可与 LLM 服务交互并为用户提供个性化推荐的智能应用程序。
+在本实验室中，你将开发 AI 支持的助手的代码，旨在自动执行开发运营并帮助简化任务。 你将使用语义内核 SDK 生成该 AI 助手，并将其连接到大型语言模型 (LLM) 服务。 使用语义内核 SDK，能够创建一个可与 LLM 服务交互、对自然语言查询作出响应并为用户提供个性化见解的智能应用程序。 在本练习中，提供了模拟函数来表示典型的 DevOps 任务。 现在就开始吧！
+
+此练习大约需要 **30** 分钟。
 
 ## 部署聊天完成模型
 
 1. 导航到 [https://portal.azure.com](https://portal.azure.com)。
 
-1. 使用默认设置创建新的 Azure OpenAI 资源。
+1. 使用默认设置创建新的 Azure OpenAI 资源****。
 
 1. 创建资源后，选择“转到资源”****。
 
 1. 在“**概述**”页上，选择“**转到 Azure Foundry 门户**”。
 
-1. 依次选择“**新建部署**”、“**从基础模型**”。
+    Azure AI Foundry 门户应在一个新标签页中打开。
 
-1. 在模型列表上搜索“**GPT-4o**”，然后选择并确认。
+1. 在左侧导航窗格中，选择“部署”****。
 
-1. 输入部署的名称并保留默认选项。
+1. 选择“部署模型”，然后选择“部署基础模型”********。
 
-1. Azure 门户部署完成后，导航回 Azure 门户中的 Azure OpenAI 资源。
+1. 在模型列表上搜索“gpt-4o”，选择它，然后选择确认********。
 
-1. 在“资源管理”下，转到“密钥和终结点”********。
+    随即应会显示一个对话框，用于配置向 Azure OpenAI 资源的部署。
 
-    你将在下一个任务中使用此处提供的数据来生成内核。 请记得将密钥保密并妥善保存！
+1. 查看设置，然后选择“部署”****。
+
+    部署完成时，“部署详细信息”页将会出现。
+
+1. 在“终结点”下，观察“目标 URI”和“密钥”************。
+
+    你将在下一个任务中使用此处的值来生成内核。 请记得将密钥保密并妥善保存！
 
 ## 准备应用程序配置
 
@@ -99,23 +108,25 @@ lab:
 
     该文件已在代码编辑器中打开。
 
-1. 使用 Azure OpenAI 服务模型 ID、终结点和 API 密钥更新值。
+1. 更新 Azure OpenAI 模型部署中的值：
 
     **Python**
     ```python
-    MODEL_DEPLOYMENT=""
-    BASE_URL=""
+    MODEL_ENDPOINT=""
     API_KEY="
+    MODEL_DEPLOYMENT_NAME=""
     ```
 
     **C#**
     ```json
     {
-        "modelName": "",
-        "endpoint": "",
-        "apiKey": ""
+        "openai_endpoint": "",
+        "api_key": "",
+        "model_deployment_name": "",
     }
     ```
+
+> **注意**：如果使用 C#，请使用资源“主页”页面上的“Azure OpenAI”终结点 URL 作为 `openai_endpoint` 值********。
 
 1. 更新值后，使用 **CTRL+S** 命令保存更改，然后使用 **CTRL+Q** 命令关闭代码编辑器，同时保持 Cloud Shell 命令行打开状态。
 
@@ -140,9 +151,9 @@ lab:
     # Create a kernel builder with Azure OpenAI chat completion
     kernel = Kernel()
     chat_completion = AzureChatCompletion(
-        deployment_name=deployment_name,
+        deployment_name=model_name,
         api_key=api_key,
-        base_url=base_url,
+        base_url=endpoint,
     )
     kernel.add_service(chat_completion)
     ```
@@ -150,11 +161,11 @@ lab:
      ```c#
     // Create a kernel builder with Azure OpenAI chat completion
     var builder = Kernel.CreateBuilder();
-    builder.AddAzureOpenAIChatCompletion(modelId, endpoint, apiKey);
+    builder.AddAzureOpenAIChatCompletion(modelName, endpoint, apiKey);
     var kernel = builder.Build();
     ```
 
-1. 在文件底部附近，查找注释“**创建内核函数以生成阶段环境**”，并添加以下代码以创建将生成过渡环境的模拟插件 functin：
+1. 在文件底部附近的“DevopsPlugin”类中，查找注释“创建内核函数以生成阶段环境”，并添加以下代码以创建将生成过渡环境的模拟插件 functin：********
 
     **Python**
     ```python
@@ -176,7 +187,7 @@ lab:
 
     `KernelFunction`修饰器声明本机函数。 对函数使用描述性名称，以便 AI 可以正确调用它。 
 
-1. 导航到注释“**将插件导入内核**”并添加以下代码：
+1. 在 main 方法中，导航到注释“将插件导入内核”，并添加以下代码以使用已完成的插件类：********
 
     **Python**
     ```python
@@ -189,7 +200,6 @@ lab:
     // Import plugins to the kernel
     kernel.ImportPluginFromType<DevopsPlugin>();
     ```
-
 
 1. 在注释“**创建提示执行设置**”下，添加以下代码以自动调用函数：
 
@@ -238,11 +248,11 @@ lab:
     az login
     ```
 
-    **<font color="red">必须登录到 Azure - 即使已对 Cloud Shell 会话进行身份验证。</font>**
+    **<font color="red">必须登录到 Azure - 即使 Cloud Shell 会话已经过身份验证。</font>**
 
     > **备注**：在大多数情况下，仅使用 *az login* 就足够了。 但是，如果在多个租户中有订阅，则可能需要使用 *--tenant* 参数指定租户。 有关详细信息，请参阅[使用 Azure CLI 以交互方式登录到 Azure](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively)。
 
-1. 出现提示时，请按照说明在新选项卡中打开登录页，并输入提供的身份验证代码和 Azure 凭据。 然后在命令行中完成登录过程，出现提示时选择包含 Azure AI Foundry 中心的订阅。
+1. 出现提示时，请按照说明在新选项卡中打开登录页，并输入提供的验证码和 Azure 凭据。 然后在命令行中完成登录过程，并在出现提示时选择包含 Azure AI Foundry 中心的订阅。
 
 1. 登录后，输入以下命令来运行应用程序：
 
@@ -331,7 +341,9 @@ lab:
     Assistant: The stage environment cannot be deployed because the earlier stage build failed due to unit test errors. Deploying a faulty build to stage may cause eventual issues and compromise the environment.
     ```
 
-    来自 LLM 的响应可能会有所不同，但仍会阻止你部署暂存站点。
+    来自 LLM 的响应可能会有所不同，但仍会阻止你部署暂存站点。 
+    
+1. 按 <kbd>Enter</kbd> 结束程序。
 
 ## 创建 Handlebars 提示
 
@@ -451,12 +463,15 @@ lab:
     Assistant: The new branch `feature-login` has been successfully created from `main`.
     ```
 
+1. 按 <kbd>Enter</kbd> 结束程序。
+
 ## 要求用户同意操作
 
 1. 在文件底部附近，找到注释“**创建函数筛选器**”，并添加以下代码：
 
     **Python**
     ```python
+    # Create a function filter
     async def permission_filter(context: FunctionInvocationContext, next: Callable[[FunctionInvocationContext], Awaitable[None]]) -> None:
         await next(context)
         result = context.result
@@ -502,9 +517,11 @@ lab:
 
     此代码使用 `FunctionInvocationContext` 对象，以确定调用的插件和函数。
 
-1. 添加以下逻辑以请求用户预订外部测试版的权限：
+1. 添加以下逻辑，请求用户的权限以继续进行操作：
 
-     **Python**
+    请务必保持正确的缩进级别。
+
+    **Python**
     ```python
     # Request user approval
     print("System Message: The assistant requires approval to complete this operation. Do you approve (Y/N)")
@@ -569,6 +586,8 @@ lab:
     User: N
     Assistant: I'm sorry, but I am unable to proceed with the deployment.
     ```
+
+1. 按 <kbd>Enter</kbd> 结束程序。
 
 ### 审阅
 
